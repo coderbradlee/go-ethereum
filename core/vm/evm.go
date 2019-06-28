@@ -65,7 +65,7 @@ func run(evm *EVM, contract *Contract, input []byte, readOnly bool) ([]byte, err
 				evm.interpreter = interpreter
 			}
 			ret,err:=interpreter.Run(contract, input, readOnly)
-			fmt.Println("249::::",err)
+			fmt.Println("68XXXXXX",err)
 			return ret,err
 		}
 	}
