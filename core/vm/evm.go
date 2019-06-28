@@ -17,6 +17,7 @@
 package vm
 
 import (
+	"fmt"
 	"math/big"
 	"sync/atomic"
 	"time"
@@ -352,6 +353,7 @@ func (evm *EVM) create(caller ContractRef, code []byte, gas uint64, value *big.I
 	if evm.StateDB.GetNonce(address) != 0 || (contractHash != (common.Hash{}) && contractHash != emptyCodeHash) {
 		return nil, common.Address{}, 0, ErrContractAddressCollision
 	}
+	fmt.Println("356:",gas)
 	// Create a new account on the state
 	snapshot := evm.StateDB.Snapshot()
 	evm.StateDB.CreateAccount(address)
@@ -365,7 +367,7 @@ func (evm *EVM) create(caller ContractRef, code []byte, gas uint64, value *big.I
 	// only.
 	contract := NewContract(caller, AccountRef(address), value, gas)
 	contract.SetCallCode(&address, crypto.Keccak256Hash(code), code)
-
+	fmt.Println("370:",gas)
 	if evm.vmConfig.NoRecursion && evm.depth > 0 {
 		return nil, address, gas, nil
 	}
@@ -384,12 +386,14 @@ func (evm *EVM) create(caller ContractRef, code []byte, gas uint64, value *big.I
 	// be stored due to not enough gas set an error and let it be handled
 	// by the error checking condition below.
 	if err == nil && !maxCodeSizeExceeded {
+		fmt.Println("389:",contract.Gas)
 		createDataGas := uint64(len(ret)) * params.CreateDataGas
 		if contract.UseGas(createDataGas) {
 			evm.StateDB.SetCode(address, ret)
 		} else {
 			err = ErrCodeStoreOutOfGas
 		}
+		fmt.Println("396:",contract.Gas)
 	}
 
 	// When an error was returned by the EVM or when setting the creation code
@@ -398,7 +402,9 @@ func (evm *EVM) create(caller ContractRef, code []byte, gas uint64, value *big.I
 	if maxCodeSizeExceeded || (err != nil && (evm.ChainConfig().IsHomestead(evm.BlockNumber) || err != ErrCodeStoreOutOfGas)) {
 		evm.StateDB.RevertToSnapshot(snapshot)
 		if err != errExecutionReverted {
+			fmt.Println("405:",contract.Gas)
 			contract.UseGas(contract.Gas)
+			fmt.Println("407:",contract.Gas)
 		}
 	}
 	// Assign err if contract code size exceeds the max while the err is still empty.
@@ -408,6 +414,7 @@ func (evm *EVM) create(caller ContractRef, code []byte, gas uint64, value *big.I
 	if evm.vmConfig.Debug && evm.depth == 0 {
 		evm.vmConfig.Tracer.CaptureEnd(ret, gas-contract.Gas, time.Since(start), err)
 	}
+	fmt.Println("416:",contract.Gas)
 	return ret, address, contract.Gas, err
 
 }
