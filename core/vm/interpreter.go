@@ -246,7 +246,7 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 		if operation.returns {
 			in.returnData = res
 		}
-
+		fmt.Println("249::::",err)
 		switch {
 		case err != nil:
 			return nil, err

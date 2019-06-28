@@ -48,7 +48,9 @@ func run(evm *EVM, contract *Contract, input []byte, readOnly bool) ([]byte, err
 		if evm.ChainConfig().IsByzantium(evm.BlockNumber) {
 			precompiles = PrecompiledContractsByzantium
 		}
+
 		if p := precompiles[*contract.CodeAddr]; p != nil {
+
 			return RunPrecompiledContract(p, input, contract)
 		}
 	}
@@ -62,7 +64,9 @@ func run(evm *EVM, contract *Contract, input []byte, readOnly bool) ([]byte, err
 				}(evm.interpreter)
 				evm.interpreter = interpreter
 			}
-			return interpreter.Run(contract, input, readOnly)
+			ret,err:=interpreter.Run(contract, input, readOnly)
+			fmt.Println("249::::",err)
+			return ret,err
 		}
 	}
 	return nil, ErrNoCompatibleInterpreter
