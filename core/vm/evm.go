@@ -404,7 +404,7 @@ func (evm *EVM) create(caller ContractRef, code []byte, gas uint64, value *big.I
 		if err != errExecutionReverted {
 			fmt.Println("405:",contract.Gas)
 			contract.UseGas(contract.Gas)
-			fmt.Println("407:",contract.Gas)
+			fmt.Println("407:",contract.Gas,":",err,"maxCodeSizeExceeded:",maxCodeSizeExceeded)
 		}
 	}
 	// Assign err if contract code size exceeds the max while the err is still empty.
