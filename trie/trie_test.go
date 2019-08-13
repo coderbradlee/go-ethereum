@@ -167,19 +167,26 @@ func TestXX(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
-	fmt.Println(v)
+	fmt.Printf("root %s",string(v))
 
 	updateString(trie, "120000", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
 
-	root2,_:=trie.Commit(nil)
-	triedb.Commit(root2, true)
+	root1,_:=trie.Commit(nil)
+	triedb.Commit(root1, true)
 
-	trie2, _ := New(root, triedb)
+	trie0, _ := New(root, triedb)
+	v, err = trie0.TryGet([]byte("120000"))
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	fmt.Printf("root %s",string(v))
+
+	trie2, _ := New(root1, triedb)
 	v, err = trie2.TryGet([]byte("120000"))
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
-	fmt.Println(v)
+	fmt.Printf("root1 %s",string(v))
 }
 func TestInsert(t *testing.T) {
 	trie := newEmpty()
