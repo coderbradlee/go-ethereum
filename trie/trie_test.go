@@ -151,7 +151,36 @@ func testMissingNode(t *testing.T, memonly bool) {
 		t.Errorf("Wrong error: %v", err)
 	}
 }
+func TestXX(t *testing.T) {
+	diskdb := memorydb.New()
+	triedb := NewDatabase(diskdb)
 
+	trie, _ := New(common.Hash{}, triedb)
+	updateString(trie, "120000", "qwerqwerqwerqwerqwerqwerqwerqwer")
+	updateString(trie, "123456", "asdfasdfasdfasdfasdfasdfasdfasdf")
+	root, _ := trie.Commit(nil)
+	triedb.Commit(root, true)
+
+
+	trie, _ = New(root, triedb)
+	v, err := trie.TryGet([]byte("120000"))
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	fmt.Println(v)
+
+	updateString(trie, "120000", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+
+	root2,_:=trie.Commit(nil)
+	triedb.Commit(root2, true)
+
+	trie2, _ := New(root, triedb)
+	v, err = trie2.TryGet([]byte("120000"))
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	fmt.Println(v)
+}
 func TestInsert(t *testing.T) {
 	trie := newEmpty()
 
