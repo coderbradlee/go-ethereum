@@ -112,7 +112,7 @@ func gasSStore(gt params.GasTable, evm *EVM, contract *Contract, stack *Stack, m
 
 		current = evm.StateDB.GetState(contract.Address(), common.BigToHash(x))
 	)
-	fmt.Println(x,":",y)
+	fmt.Println("gasSStore:",x,":",y)
 	// The legacy gas metering only takes into consideration the current state
 	// Legacy rules should be applied if we are in Petersburg (removal of EIP-1283)
 	// OR Constantinople is not active
