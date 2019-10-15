@@ -17,6 +17,7 @@
 package vm
 
 import (
+	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/params"
@@ -108,8 +109,10 @@ func gasReturnDataCopy(gt params.GasTable, evm *EVM, contract *Contract, stack *
 func gasSStore(gt params.GasTable, evm *EVM, contract *Contract, stack *Stack, mem *Memory, memorySize uint64) (uint64, error) {
 	var (
 		y, x    = stack.Back(1), stack.Back(0)
+
 		current = evm.StateDB.GetState(contract.Address(), common.BigToHash(x))
 	)
+	fmt.Println(x,":",y)
 	// The legacy gas metering only takes into consideration the current state
 	// Legacy rules should be applied if we are in Petersburg (removal of EIP-1283)
 	// OR Constantinople is not active
