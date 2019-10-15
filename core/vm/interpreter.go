@@ -93,6 +93,7 @@ func NewEVMInterpreter(evm *EVM, cfg Config) *EVMInterpreter {
 		switch {
 		case evm.ChainConfig().IsConstantinople(evm.BlockNumber):
 			cfg.JumpTable = constantinopleInstructionSet
+			fmt.Println("constantinopleInstructionSet")
 		case evm.ChainConfig().IsByzantium(evm.BlockNumber):
 			cfg.JumpTable = byzantiumInstructionSet
 		case evm.ChainConfig().IsHomestead(evm.BlockNumber):
@@ -205,6 +206,7 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 			// for a call operation is the value. Transferring value from one
 			// account to the others means the state is modified and should also
 			// return with an error.
+			fmt.Println("in.readOnly && in.evm.chainRules.IsByzantium {")
 			if operation.writes || (op == CALL && stack.Back(2).Sign() != 0) {
 				return nil, errWriteProtection
 			}
@@ -248,7 +250,7 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 			in.cfg.Tracer.CaptureState(in.evm, pc, op, gasCopy, cost, mem, stack, contract, in.evm.depth, err)
 			logged = true
 		}
-
+		fmt.Println("before operation.execute")
 		// execute the operation
 		res, err = operation.execute(&pc, in, contract, mem, stack)
 		// verifyPool is a build flag. Pool verification makes sure the integrity

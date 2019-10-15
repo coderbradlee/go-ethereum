@@ -17,6 +17,7 @@
 package vm
 
 import (
+	"fmt"
 	"math/big"
 	"sync/atomic"
 	"time"
@@ -46,8 +47,10 @@ func run(evm *EVM, contract *Contract, input []byte, readOnly bool) ([]byte, err
 		precompiles := PrecompiledContractsHomestead
 		if evm.ChainConfig().IsByzantium(evm.BlockNumber) {
 			precompiles = PrecompiledContractsByzantium
+			fmt.Println("PrecompiledContractsByzantium")
 		}
 		if p := precompiles[*contract.CodeAddr]; p != nil {
+			fmt.Println("p := precompiles[*contract.CodeAddr];")
 			return RunPrecompiledContract(p, input, contract)
 		}
 	}
