@@ -18,7 +18,6 @@ package vm
 
 import (
 	"errors"
-	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -954,7 +953,7 @@ func makePush(size uint64, pushByteSize int) executionFunc {
 // make dup instruction function
 func makeDup(size int64) executionFunc {
 	return func(pc *uint64, interpreter *EVMInterpreter, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
-		fmt.Println("file instructions.go line 957,makeDup")
+		//fmt.Println("file instructions.go line 957,makeDup")
 		stack.dup(interpreter.intPool, int(size))
 		return nil, nil
 	}
@@ -965,7 +964,7 @@ func makeSwap(size int64) executionFunc {
 	// switch n + 1 otherwise n would be swapped with n
 	size++
 	return func(pc *uint64, interpreter *EVMInterpreter, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
-		fmt.Println("file instructions.go line 968,makeSwap")
+		//fmt.Println("file instructions.go line 968,makeSwap")
 		stack.swap(int(size))
 		return nil, nil
 	}
