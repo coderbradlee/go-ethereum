@@ -189,7 +189,8 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 		// enough stack items available to perform the operation.
 		op = contract.GetOp(pc)
 		operation := in.cfg.JumpTable[op]
-		fmt.Println("file interpreter.go line 192,operation.reverts:",operation.reverts,op.String())
+		//fmt.Println("file interpreter.go line 192,operation.reverts:",operation.reverts,op.String())
+		fmt.Println(op.String())
 		if !operation.valid {
 			return nil, fmt.Errorf("invalid opcode 0x%x", int(op))
 		}
