@@ -42,7 +42,7 @@ type (
 )
 
 // run runs the given contract and takes care of running precompiles with a fallback to the byte code interpreter.
-func run(evm *EVM, contract *Contract, input []byte, readOnly bool) ([]byte, error) {
+func run(evm *EVM, contract *Contract, input []byte, readOnly bool) (ret []byte,err error) {
 	if contract.CodeAddr != nil {
 		fmt.Println("evm.go line 47:",len(contract.Code))
 		precompiles := PrecompiledContractsHomestead
@@ -64,7 +64,9 @@ func run(evm *EVM, contract *Contract, input []byte, readOnly bool) ([]byte, err
 				evm.interpreter = interpreter
 			}
 			fmt.Println("evm.go line 66,before call interpreter.Run")
-			return interpreter.Run(contract, input, readOnly)
+			ret,err= interpreter.Run(contract, input, readOnly)
+			fmt.Println("evm.go line 68,after call interpreter.Run:",err)
+			return
 		}
 	}
 	return nil, ErrNoCompatibleInterpreter
