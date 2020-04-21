@@ -250,7 +250,7 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 
 		// execute the operation
 		res, err = operation.execute(&pc, in, contract, mem, stack)
-		fmt.Println("file interpreter.go line 253 after operation.execute:",err)
+		fmt.Println("file interpreter.go line 253 after operation.execute,operation.reverts:",operation.reverts)
 		// verifyPool is a build flag. Pool verification makes sure the integrity
 		// of the integer pool by comparing values to a default value.
 		if verifyPool {
@@ -261,7 +261,6 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 		if operation.returns {
 			in.returnData = res
 		}
-		fmt.Println("file interpreter.go line 264 operation.reverts:",operation.reverts)
 		switch {
 		case err != nil:
 			return nil, err
