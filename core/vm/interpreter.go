@@ -192,6 +192,7 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 		if !operation.valid {
 			return nil, fmt.Errorf("invalid opcode 0x%x", int(op))
 		}
+		fmt.Println("file interpreter.go line 253 after operation.execute,operation.reverts:",operation.reverts)
 		// Validate stack
 		if sLen := stack.len(); sLen < operation.minStack {
 			return nil, fmt.Errorf("stack underflow (%d <=> %d)", sLen, operation.minStack)
@@ -250,7 +251,7 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 
 		// execute the operation
 		res, err = operation.execute(&pc, in, contract, mem, stack)
-		fmt.Println("file interpreter.go line 253 after operation.execute,operation.reverts:",operation.reverts)
+
 		// verifyPool is a build flag. Pool verification makes sure the integrity
 		// of the integer pool by comparing values to a default value.
 		if verifyPool {
