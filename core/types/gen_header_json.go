@@ -86,10 +86,10 @@ func (h *Header) UnmarshalJSON(input []byte) error {
 	h.UncleHash = *dec.UncleHash
 	if dec.Coinbase == nil {
 		//return errors.New("missing required field 'miner' for Header")
-		zero:=common.HexToAddress("0x0000000000000000000000000000000000000000")
-		dec.Coinbase=&zero
+		h.Coinbase=common.HexToAddress("0x0000000000000000000000000000000000000000")
+		//dec.Coinbase=&zero
 	}
-	h.Coinbase = *dec.Coinbase
+	//h.Coinbase = *dec.Coinbase
 	if dec.Root == nil {
 		return errors.New("missing required field 'stateRoot' for Header")
 	}
