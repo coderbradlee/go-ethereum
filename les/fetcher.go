@@ -32,6 +32,7 @@ import (
 	"github.com/ethereum/go-ethereum/light"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/p2p/enode"
+	ethfetcher"github.com/ethereum/go-ethereum/eth/fetcher"
 )
 
 const (
@@ -136,6 +137,8 @@ type lightFetcher struct {
 	chain   *light.LightChain     // The local light chain which maintains the canonical header chain.
 	fetcher *fetcher.BlockFetcher // The underlying fetcher which takes care block header retrieval.
 
+	txFetcher    *ethfetcher.TxFetcher//add txfetcher for txpool
+
 	// Peerset maintained by fetcher
 	plock sync.RWMutex
 	peers map[enode.ID]*fetcherPeer
@@ -180,6 +183,7 @@ func newLightFetcher(chain *light.LightChain, engine consensus.Engine, peers *se
 		chain:       chain,
 		reqDist:     reqDist,
 		fetcher:     fetcher.NewBlockFetcher(true, chain.GetHeaderByHash, nil, validator, nil, heighter, inserter, nil, dropper),
+		txFetcher:
 		peers:       make(map[enode.ID]*fetcherPeer),
 		synchronise: syncFn,
 		announceCh:  make(chan *announce),
@@ -188,6 +192,7 @@ func newLightFetcher(chain *light.LightChain, engine consensus.Engine, peers *se
 		syncDone:    make(chan *types.Header),
 		closeCh:     make(chan struct{}),
 	}
+	f.txFetcher=ethfetcher.NewTxFetcher(f.txpool.Has, h.txpool.AddRemotes, fetchTx)
 	peers.subscribe(f)
 	return f
 }

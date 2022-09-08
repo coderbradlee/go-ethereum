@@ -308,6 +308,7 @@ func (pool *TxPool) setNewHead(head *types.Header) {
 	defer cancel()
 
 	txc, _ := pool.reorgOnNewHead(ctx, head)
+	pool.addAndReplaceTx(head)
 	m, r := txc.getLists()
 	pool.relay.NewHead(pool.head, m, r)
 
@@ -315,6 +316,21 @@ func (pool *TxPool) setNewHead(head *types.Header) {
 	next := new(big.Int).Add(head.Number, big.NewInt(1))
 	pool.istanbul = pool.config.IsIstanbul(next)
 	pool.eip2718 = pool.config.IsBerlin(next)
+}
+
+func (pool *TxPool) addAndReplaceTx(newHead *types.Header) {
+	blo, err := pool.chain.GetBlock(context.Background(), newHead.Hash(), newHead.Number.Uint64())
+	if err != nil {
+		log.Error("addAndReplaceTx", err.Error())
+	}
+	log.Info("addAndReplaceTx transactions", "count", len(blo.Transactions()))
+	pool.pending = make(map[common.Hash]*types.Transaction, 0)
+	for i, tx := range blo.Transactions() {
+		pool.pending[tx.Hash()] = tx
+		if err != nil {
+			log.Error("pool.add", "index", i, "hash", tx.Hash())
+		}
+	}
 }
 
 // Stop stops the light transaction pool
