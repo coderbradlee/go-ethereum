@@ -80,9 +80,11 @@ const (
 	GetTxStatusMsg         = 0x14
 	TxStatusMsg            = 0x15
 	// Protocol messages introduced in LPV3
-	StopMsg               = 0x16
-	ResumeMsg             = 0x17
-	PooledTransactionsMsg = 0x0a
+	StopMsg   = 0x16
+	ResumeMsg = 0x17
+
+	GetPooledTransactionsMsg = 0x09
+	PooledTransactionsMsg    = 0x0a
 )
 
 // GetBlockHeadersData represents a block header query (the request ID is not included)

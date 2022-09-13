@@ -56,16 +56,20 @@ type TxPool struct {
 	scope        event.SubscriptionScope
 	chainHeadCh  chan core.ChainHeadEvent
 	chainHeadSub event.Subscription
-	mu           sync.RWMutex
-	chain        *LightChain
-	odr          OdrBackend
-	chainDb      ethdb.Database
-	relay        TxRelayBackend
-	head         common.Hash
-	nonce        map[common.Address]uint64            // "pending" nonce
-	pending      map[common.Hash]*types.Transaction   // pending transactions by tx hash
-	mined        map[common.Hash][]*types.Transaction // mined transactions by block hash
-	clearIdx     uint64                               // earliest block nr that can contain mined tx info
+
+	poolTxCh  chan core.NewTxsEvent
+	poolTxSub event.Subscription
+
+	mu       sync.RWMutex
+	chain    *LightChain
+	odr      OdrBackend
+	chainDb  ethdb.Database
+	relay    TxRelayBackend
+	head     common.Hash
+	nonce    map[common.Address]uint64            // "pending" nonce
+	pending  map[common.Hash]*types.Transaction   // pending transactions by tx hash
+	mined    map[common.Hash][]*types.Transaction // mined transactions by block hash
+	clearIdx uint64                               // earliest block nr that can contain mined tx info
 
 	istanbul bool // Fork indicator whether we are in the istanbul stage.
 	eip2718  bool // Fork indicator whether we are in the eip2718 stage.
@@ -105,6 +109,7 @@ func NewTxPool(config *params.ChainConfig, chain *LightChain, relay TxRelayBacke
 	}
 	// Subscribe events from blockchain
 	pool.chainHeadSub = pool.chain.SubscribeChainHeadEvent(pool.chainHeadCh)
+	pool.poolTxSub = pool.SubscribeNewTxsEvent(pool.poolTxCh)
 	go pool.eventLoop()
 
 	return pool
@@ -292,9 +297,15 @@ func (pool *TxPool) eventLoop() {
 			// hack in order to avoid hogging the lock; this part will
 			// be replaced by a subsequent PR.
 			time.Sleep(time.Millisecond)
-
+		case ev := <-pool.poolTxCh:
+			pool.addTxEvent(ev)
+			// hack in order to avoid hogging the lock; this part will
+			// be replaced by a subsequent PR.
+			time.Sleep(time.Millisecond)
 		// System stopped
 		case <-pool.chainHeadSub.Err():
+			return
+		case <-pool.poolTxSub.Err():
 			return
 		}
 	}
@@ -338,6 +349,14 @@ func (pool *TxPool) AddAndReplaceTx(txs []*types.Transaction) {
 	log.Info("addAndReplaceTx transactions", "count", len(txs))
 	pool.pending = make(map[common.Hash]*types.Transaction, 0)
 	for _, tx := range txs {
+		pool.pending[tx.Hash()] = tx
+	}
+}
+
+func (pool *TxPool) addTxEvent(txs core.NewTxsEvent) {
+	log.Info("addTxEvent", len(txs.Txs))
+	pool.pending = make(map[common.Hash]*types.Transaction, 0)
+	for _, tx := range txs.Txs {
 		pool.pending[tx.Hash()] = tx
 	}
 }
