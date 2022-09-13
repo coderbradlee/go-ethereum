@@ -100,6 +100,7 @@ func NewTxPool(config *params.ChainConfig, chain *LightChain, relay TxRelayBacke
 		mined:       make(map[common.Hash][]*types.Transaction),
 		quit:        make(chan bool),
 		chainHeadCh: make(chan core.ChainHeadEvent, chainHeadChanSize),
+		poolTxCh:    make(chan core.NewTxsEvent, chainHeadChanSize),
 		chain:       chain,
 		relay:       relay,
 		odr:         chain.Odr(),
