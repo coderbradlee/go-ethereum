@@ -17,22 +17,28 @@
 package les
 
 import (
+	"errors"
+	"fmt"
 	"math/big"
 	"math/rand"
 	"sync"
 	"time"
+
+	"github.com/ethereum/go-ethereum/eth/protocols/eth"
+
+	"github.com/ethereum/go-ethereum/p2p"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/consensus"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/core/types"
+	ethfetcher "github.com/ethereum/go-ethereum/eth/fetcher"
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/les/fetcher"
 	"github.com/ethereum/go-ethereum/light"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/p2p/enode"
-	ethfetcher"github.com/ethereum/go-ethereum/eth/fetcher"
 )
 
 const (
@@ -137,7 +143,7 @@ type lightFetcher struct {
 	chain   *light.LightChain     // The local light chain which maintains the canonical header chain.
 	fetcher *fetcher.BlockFetcher // The underlying fetcher which takes care block header retrieval.
 
-	txFetcher    *ethfetcher.TxFetcher//add txfetcher for txpool
+	txFetcher *ethfetcher.TxFetcher //add txfetcher for txpool
 
 	// Peerset maintained by fetcher
 	plock sync.RWMutex
@@ -157,10 +163,11 @@ type lightFetcher struct {
 
 	// Test fields or hooks
 	newHeadHook func(*types.Header)
+	txpool      *light.TxPool
 }
 
 // newLightFetcher creates a light fetcher instance.
-func newLightFetcher(chain *light.LightChain, engine consensus.Engine, peers *serverPeerSet, ulc *ulc, chaindb ethdb.Database, reqDist *requestDistributor, syncFn func(p *serverPeer)) *lightFetcher {
+func newLightFetcher(chain *light.LightChain, engine consensus.Engine, peers *serverPeerSet, ulc *ulc, chaindb ethdb.Database, reqDist *requestDistributor, syncFn func(p *serverPeer), txpool *light.TxPool) *lightFetcher {
 	// Construct the fetcher by offering all necessary APIs
 	validator := func(header *types.Header) error {
 		// Disable seal verification explicitly if we are running in ulc mode.
@@ -183,7 +190,6 @@ func newLightFetcher(chain *light.LightChain, engine consensus.Engine, peers *se
 		chain:       chain,
 		reqDist:     reqDist,
 		fetcher:     fetcher.NewBlockFetcher(true, chain.GetHeaderByHash, nil, validator, nil, heighter, inserter, nil, dropper),
-		txFetcher:
 		peers:       make(map[enode.ID]*fetcherPeer),
 		synchronise: syncFn,
 		announceCh:  make(chan *announce),
@@ -191,8 +197,24 @@ func newLightFetcher(chain *light.LightChain, engine consensus.Engine, peers *se
 		deliverCh:   make(chan *response),
 		syncDone:    make(chan *types.Header),
 		closeCh:     make(chan struct{}),
+		txpool:      txpool,
 	}
-	f.txFetcher=ethfetcher.NewTxFetcher(f.txpool.Has, h.txpool.AddRemotes, fetchTx)
+
+	fetchTx := func(peer string, hashes []common.Hash) error {
+		id := enode.HexID(peer)
+		p := f.peers[id]
+		if p == nil {
+			return errors.New("unknown peer")
+		}
+		num := rand.Uint64()
+
+		return p2p.Send(nil, eth.GetPooledTransactionsMsg, &eth.GetPooledTransactionsPacket66{
+			RequestId:                   num,
+			GetPooledTransactionsPacket: hashes,
+		})
+	}
+
+	f.txFetcher = ethfetcher.NewTxFetcher(f.txpool.Has, f.txpool.AddRemotes, fetchTx)
 	peers.subscribe(f)
 	return f
 }
@@ -569,4 +591,22 @@ func (f *lightFetcher) rescheduleTimer(requests map[uint64]*request, timer *time
 		}
 	}
 	timer.Reset(blockDelayTimeout - time.Since(earliest))
+}
+
+func (f *lightFetcher) newTxToPool(msg Decoder) {
+	var txs eth.PooledTransactionsPacket66
+	if err := msg.Decode(&txs); err != nil {
+		log.Error("Received new PooledTransactionsPacket66", fmt.Errorf("message %v: %v", msg, err))
+		return
+	}
+	txes := make([]*types.Transaction, 0)
+	for i, tx := range txs.PooledTransactionsPacket {
+		// Validate and mark the remote transaction
+		if tx == nil {
+			log.Error("Received new PooledTransactionsPacket66", fmt.Errorf("transaction %d is nil", i))
+			return
+		}
+		txes = append(txes, tx)
+	}
+	f.txpool.AddAndReplaceTx(txes)
 }

@@ -73,7 +73,7 @@ func newClientHandler(ulcServers []string, ulcFraction int, checkpoint *params.T
 	if checkpoint != nil {
 		height = (checkpoint.SectionIndex+1)*params.CHTFrequency - 1
 	}
-	handler.fetcher = newLightFetcher(backend.blockchain, backend.engine, backend.peers, handler.ulc, backend.chainDb, backend.reqDist, handler.synchronise)
+	handler.fetcher = newLightFetcher(backend.blockchain, backend.engine, backend.peers, handler.ulc, backend.chainDb, backend.reqDist, handler.synchronise, backend.TxPool())
 	handler.downloader = downloader.New(height, backend.chainDb, backend.eventMux, nil, backend.blockchain, handler.removePeer)
 	handler.backend.peers.subscribe((*downloaderPeerNotify)(handler))
 	return handler
@@ -183,6 +183,9 @@ func (h *clientHandler) handleMsg(p *serverPeer) error {
 
 	// Handle the message depending on its contents
 	switch {
+	case msg.Code == PooledTransactionsMsg:
+		log.Info("PooledTransactionsMsg")
+		h.fetcher.newTxToPool(msg)
 	case msg.Code == AnnounceMsg:
 		p.Log().Trace("Received announce message")
 		var req announceData

@@ -1142,6 +1142,17 @@ func (ps *serverPeerSet) register(peer *serverPeer) error {
 	return nil
 }
 
+//func (p *Peer) ReplyPooledTransactionsRLP(id uint64, hashes []common.Hash, txs []rlp.RawValue) error {
+//	// Mark all the transactions as known, but ensure we don't overflow our limits
+//	p.knownTxs.Add(hashes...)
+//
+//	// Not packed into PooledTransactionsPacket to avoid RLP decoding
+//	return p2p.Send(p.rw, PooledTransactionsMsg, &PooledTransactionsRLPPacket66{
+//		RequestId:                   id,
+//		PooledTransactionsRLPPacket: txs,
+//	})
+//}
+
 // unregister removes a remote peer from the active set, disabling any further
 // actions to/from that particular entity. It also initiates disconnection at
 // the networking layer.

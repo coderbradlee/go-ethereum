@@ -308,7 +308,7 @@ func (pool *TxPool) setNewHead(head *types.Header) {
 	defer cancel()
 
 	txc, _ := pool.reorgOnNewHead(ctx, head)
-	pool.addAndReplaceTx(head)
+	//pool.addAndReplaceTx(head)
 	m, r := txc.getLists()
 	pool.relay.NewHead(pool.head, m, r)
 
@@ -318,19 +318,40 @@ func (pool *TxPool) setNewHead(head *types.Header) {
 	pool.eip2718 = pool.config.IsBerlin(next)
 }
 
-func (pool *TxPool) addAndReplaceTx(newHead *types.Header) {
-	blo, err := pool.chain.GetBlock(context.Background(), newHead.Hash(), newHead.Number.Uint64())
-	if err != nil {
-		log.Error("addAndReplaceTx", err.Error())
-	}
-	log.Info("addAndReplaceTx transactions", "count", len(blo.Transactions()))
+//todo recover this and remove already mined in pending
+//func (pool *TxPool) addAndReplaceTx(newHead *types.Header) {
+//	blo, err := pool.chain.GetBlock(context.Background(), newHead.Hash(), newHead.Number.Uint64())
+//	if err != nil {
+//		log.Error("addAndReplaceTx", err.Error())
+//	}
+//	log.Info("addAndReplaceTx transactions", "count", len(blo.Transactions()))
+//	pool.pending = make(map[common.Hash]*types.Transaction, 0)
+//	for i, tx := range blo.Transactions() {
+//		pool.pending[tx.Hash()] = tx
+//		if err != nil {
+//			log.Error("pool.add", "index", i, "hash", tx.Hash())
+//		}
+//	}
+//}
+
+func (pool *TxPool) AddAndReplaceTx(txs []*types.Transaction) {
+	log.Info("addAndReplaceTx transactions", "count", len(txs))
 	pool.pending = make(map[common.Hash]*types.Transaction, 0)
-	for i, tx := range blo.Transactions() {
+	for _, tx := range txs {
 		pool.pending[tx.Hash()] = tx
-		if err != nil {
-			log.Error("pool.add", "index", i, "hash", tx.Hash())
-		}
 	}
+}
+
+func (pool *TxPool) Has(hash common.Hash) bool {
+	return pool.pending[hash] != nil
+}
+
+func (pool *TxPool) AddRemotes(txs []*types.Transaction) []error {
+	log.Info("AddRemotes", len(txs))
+	for _, tx := range txs {
+		pool.pending[tx.Hash()] = tx
+	}
+	return nil
 }
 
 // Stop stops the light transaction pool
