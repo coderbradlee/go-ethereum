@@ -78,9 +78,9 @@ func Sign(hash []byte, prv *ecdsa.PrivateKey) ([]byte, error) {
 	}
 	// ecdsa.PrivateKey -> btcec.PrivateKey
 	var priv btcec.PrivateKey
-	if overflow := priv.Key.SetByteSlice(prv.D.Bytes()); overflow || priv.Key.IsZero() {
-		return nil, fmt.Errorf("invalid private key")
-	}
+	//if overflow := priv.Key.SetByteSlice(prv.D.Bytes()); overflow || priv.Key.IsZero() {
+	//	return nil, fmt.Errorf("invalid private key")
+	//}
 	defer priv.Zero()
 	sig, err := btc_ecdsa.SignCompact(&priv, hash, false) // ref uncompressed pubkey
 	if err != nil {
