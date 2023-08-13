@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"math/big"
 	"strings"
 	"sync"
@@ -391,12 +392,14 @@ func (c *BoundContract) transact(opts *TransactOpts, contract *common.Address, i
 	}
 	signedTx, err := opts.Signer(opts.From, rawTx)
 	if err != nil {
+		log.Println("Signer",err)
 		return nil, err
 	}
 	if opts.NoSend {
 		return signedTx, nil
 	}
 	if err := c.transactor.SendTransaction(ensureContext(opts.Context), signedTx); err != nil {
+		log.Println("SendTransaction",err)
 		return nil, err
 	}
 	return signedTx, nil
