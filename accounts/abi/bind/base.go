@@ -399,7 +399,7 @@ func (c *BoundContract) transact(opts *TransactOpts, contract *common.Address, i
 		return signedTx, nil
 	}
 	if err := c.transactor.SendTransaction(ensureContext(opts.Context), signedTx); err != nil {
-		log.Println("SendTransaction",err)
+		log.Println("SendTransaction",opts.From.String(),signedTx.To().String(),err)
 		return nil, err
 	}
 	return signedTx, nil
